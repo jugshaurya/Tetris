@@ -22,8 +22,10 @@ const game = new Phaser.Game({
     // }
 });
   
+let s;
 // Config Functions
 function preload() {
+  s = this
   // will be setting to 16 x 16 later on
   this.load.spritesheet('blocks', 'blocks.png', {
     frameWidth : 32,
@@ -31,23 +33,20 @@ function preload() {
   })
 }
  
-
 function create() {
 
+  // Board Making
+  this.board = playingBoard(this, game.canvas.clientWidth, game.canvas.clientHeight)
+  
   // Piece on Canvas
   this.piece = drawPieceOnCanvas(this, pieces, start)
   
   // Controller
   this.keyboardCursor = this.input.keyboard.createCursorKeys();
-  // console.log()
 
 
-
-  // Board Making
-  this.board = playingBoard(this, game.canvas.clientWidth, game.canvas.clientHeight)
-
+  // Printing of Board  - For testing Purpose
   printBoardOnCanvas(this, this.board)
-  this.cameras.main.setBackgroundColor(0x990099)
 }
 
 // runs at 1000/16 ~ 62.5 frames per sec
@@ -58,27 +57,23 @@ function update () {
 
   // keyboard Control over the piece
   if (this.keyboardCursor.left.isDown) {
-    movePiece(this.piece, -pixelMovePerMove, 0)
+    movePiece(this, this.piece, -pixeldeltaPerMove, 0)
     this.keyboardCursor.left.isDown = false
+    
   }else if(this.keyboardCursor.right.isDown) {
-    movePiece(this.piece, pixelMovePerMove, 0)
+    movePiece(this, this.piece, pixeldeltaPerMove, 0)
     this.keyboardCursor.right.isDown = false
     
   }else if(this.keyboardCursor.down.isDown) {
-    movePiece(this.piece, 0, pixelMovePerMove) 
+    movePiece(this, this.piece, 0, pixeldeltaPerMove) 
     this.keyboardCursor.down.isDown = false
     passedTime = 0
   }
   // just for testing
   else if(this.keyboardCursor.up.isDown){
+    movePiece(this,this.piece, 0, -pixeldeltaPerMove) 
     this.keyboardCursor.up.isDown = false
-    movePiece(this.piece, 0, -pixelMovePerMove) 
   }
-  
-  // Filling Board with Piece position
-  fillBoardAccordingToPiecesPos(this, this.piece)
-
-  // inside index.js
 }
 
 // Helper Functions
@@ -92,8 +87,9 @@ function drawPieceOnCanvas (self, pieces, start) {
         complete_piece.push(a)
       }
     })
-  })  
+  }) 
   
+  fillBoardAccordingToPiecesPos(self, complete_piece)  
   return complete_piece
 }
 
@@ -103,16 +99,23 @@ function moveTileDown(self, currTime){
   passedTime += delta
 
   if (passedTime > maxTime) {
-    // movePiece(self.piece, 0, pixelMovePerMove)
+    movePiece(self, self.piece, 0, pixeldeltaPerMove)
     passedTime = 0
   }
 }
 
-function movePiece (piece, x_offset, y_offset) {
-  piece.forEach(item => {
-    item.x += x_offset
-    item.y += y_offset
-  })
+function movePiece (self, piece, x_offset, y_offset) {
+
+  // if piece position + x_offset or pice position +y_offset > world limit then do not move the piece 
+  console.log(worldLimit(self, piece, x_offset, y_offset))
+  if (worldLimit(self, piece, x_offset, y_offset)) {
+    piece.forEach(item => {
+      item.x += x_offset
+      item.y += y_offset
+    })
+
+    fillBoardAccordingToPiecesPos(self, piece)
+  }
 }
 
 function playingBoard (self, width, height) {
@@ -122,21 +125,41 @@ function playingBoard (self, width, height) {
   for (let i = 0; i < height / blockHeight; i++) {
     board.push(new Array(width / blockWidth).fill(0))
   }
-
-  console.log(board.length, board[0].length)
-
   return board;
 }
 
 function fillBoardAccordingToPiecesPos (self, piece) {
+  // console.log(self.board)
   piece.forEach(item => {
-    let item_col = item.x / pixelMovePerMove
-    let item_row = item.y / pixelMovePerMove
-
-    // console.log(item_col, item_row)
-    if(item_col >= 0 && item_col < 640 / pixelMovePerMove && item_row >= 0 && item_row <= 864 / pixelMovePerMove ) {
+    let item_col = item.x / pixeldeltaPerMove
+    let item_row = item.y / pixeldeltaPerMove
+    // console.log('sd', item_row, item_col)
+    
+    if(item_col >= 0 && item_col < 640 / pixeldeltaPerMove && item_row >= 0 && item_row <= 864 / pixeldeltaPerMove ) {
+      // console.log(self.board[item_row][item_col])
       self.board[item_row][item_col] = 1
     }
   })  
+
   // console.log('================')
+}
+
+function worldLimit (self, piece, x_offset, y_offset) {
+
+  for (let i = 0; i < piece.length; i++) {
+    // checking for left and right boundaries
+    // Remember : item is set according to top-left corner anchor point
+
+    let item = piece[i]
+    // console.log(item.x, x_offset)
+    if (item.x + x_offset < 0){
+      return false
+    }
+  
+    if (item.x + x_offset > 640-16) {
+      return false
+    }
+    
+  }
+  return true
 }
