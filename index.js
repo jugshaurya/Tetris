@@ -28,9 +28,3 @@ function printBoardOnCanvas(self, board) {
     }       
 }
 
-
-
-// document.addEventListener('keyup', (event)=> {
-//     console.log('up', event)
-// })
-

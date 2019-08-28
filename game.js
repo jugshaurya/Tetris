@@ -44,7 +44,6 @@ function create() {
   // Controller
   this.keyboardCursor = this.input.keyboard.createCursorKeys();
 
-
   // Printing of Board  - For testing Purpose
   printBoardOnCanvas(this, this.board)
 }
@@ -69,11 +68,8 @@ function update () {
     this.keyboardCursor.down.isDown = false
     passedTime = 0
   }
-  // just for testing
-  else if(this.keyboardCursor.up.isDown){
-    movePiece(this,this.piece, 0, -pixeldeltaPerMove) 
-    this.keyboardCursor.up.isDown = false
-  }
+
+  generateMorePieces(this)
 }
 
 // Helper Functions
@@ -82,14 +78,14 @@ function drawPieceOnCanvas (self, pieces, start) {
   const piece = pieces.piece  
   piece.forEach((row, x) => {
     row.forEach((col, y) => {
-      if (piece[x][y] === 1){ 
+      if (piece[x][y] === 1) { 
         let a = self.add.sprite(y*blockWidth + start.x, x*blockHeight + start.y , 'blocks').setOrigin(0, 0).setScale(0.5)
         complete_piece.push(a)
       }
     })
   }) 
   
-  fillBoardAccordingToPiecesPos(self, complete_piece)  
+  fillBoardAccordingToPiecesPos(self, complete_piece,0,0)  
   return complete_piece
 }
 
@@ -107,14 +103,13 @@ function moveTileDown(self, currTime){
 function movePiece (self, piece, x_offset, y_offset) {
 
   // if piece position + x_offset or pice position +y_offset > world limit then do not move the piece 
-  console.log(worldLimit(self, piece, x_offset, y_offset))
-  if (worldLimit(self, piece, x_offset, y_offset)) {
+  if (worldLimit(piece, x_offset, y_offset)) {
     piece.forEach(item => {
       item.x += x_offset
       item.y += y_offset
     })
 
-    fillBoardAccordingToPiecesPos(self, piece)
+    fillBoardAccordingToPiecesPos(self, piece, x_offset/pixeldeltaPerMove, y_offset/pixeldeltaPerMove)
   }
 }
 
@@ -128,38 +123,60 @@ function playingBoard (self, width, height) {
   return board;
 }
 
-function fillBoardAccordingToPiecesPos (self, piece) {
-  // console.log(self.board)
+function fillBoardAccordingToPiecesPos (self, piece, last_col, last_row) {
+  // resetting
   piece.forEach(item => {
     let item_col = item.x / pixeldeltaPerMove
     let item_row = item.y / pixeldeltaPerMove
-    // console.log('sd', item_row, item_col)
-    
-    if(item_col >= 0 && item_col < 640 / pixeldeltaPerMove && item_row >= 0 && item_row <= 864 / pixeldeltaPerMove ) {
-      // console.log(self.board[item_row][item_col])
-      self.board[item_row][item_col] = 1
-    }
-  })  
+    self.board[item_row - last_row][item_col - last_col] = 0
+  })
 
-  // console.log('================')
+  // updating
+  piece.forEach( item => {
+    let item_col = item.x / pixeldeltaPerMove
+    let item_row = item.y / pixeldeltaPerMove    
+    self.board[item_row][item_col] = 2023
+
+  })
+
 }
 
-function worldLimit (self, piece, x_offset, y_offset) {
+function worldLimit (piece, x_offset, y_offset) {
 
   for (let i = 0; i < piece.length; i++) {
     // checking for left and right boundaries
     // Remember : item is set according to top-left corner anchor point
 
     let item = piece[i]
-    // console.log(item.x, x_offset)
-    if (item.x + x_offset < 0){
+    if (item.x + x_offset < 0 
+      || item.x + x_offset > 640-16
+      || item.y + y_offset > 864-16) {
       return false
     }
-  
-    if (item.x + x_offset > 640-16) {
-      return false
-    }
-    
   }
+
   return true
 }
+
+function generateMorePieces (self) {
+  self.piece.forEach(item => {
+    if (item.y >= 864 - 16 ){
+      self.piece = drawPieceOnCanvas (self, pieces, start)
+    }
+  })
+}
+
+// function collisionDetection (board, piece) {
+  
+//   piece.forEach(item => {
+//     let item_col = item.x / pixeldeltaPerMove
+//     let item_row = item.y / pixeldeltaPerMove
+
+//     if (board[item_row][item_col] == ){
+
+//     }
+
+//   })
+
+// }
+
