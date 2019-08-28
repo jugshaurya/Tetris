@@ -1,8 +1,8 @@
 // Game initialization
 const game = new Phaser.Game({
   type: Phaser.AUTO,
-  width: 640, // tiles being of 16 x 16
-  height: 864, // tiles being of 16 x 16
+  width: 640, // tiles being of 32 x 32
+  height: 864, // tiles being of 32 x 32
   parent: gameCanvas,
   // physics: {
   //   default: 'arcade',
@@ -26,7 +26,7 @@ let s;
 // Config Functions
 function preload() {
   s = this
-  // will be setting to 16 x 16 later on
+  // will be setting to 32 x 32 later on
   this.load.spritesheet('blocks', 'blocks.png', {
     frameWidth : 32,
     frameHeight : 32
@@ -51,7 +51,7 @@ function create() {
   printBoardOnCanvas(this)
 }
 
-// runs at 1000/16 ~ 62.5 frames per sec
+// runs at 1000/32 ~ 62.5 frames per sec
 function update () { 
   
   // piece moving automatically down after 1 sec
@@ -89,7 +89,8 @@ function drawPieceOnCanvas (self, pieces, start) {
   piece.forEach((row, x) => {
     row.forEach((col, y) => {
       if (piece[x][y] === 1) { 
-        let a = self.add.sprite(y*blockWidth + start.x, x*blockHeight + start.y , 'blocks').setOrigin(0, 0).setScale(0.5)
+        let a = self.add.sprite(y*blockWidth + start.x, x*blockHeight + start.y , 'blocks').setOrigin(0, 0).setScale(1
+          )
         complete_piece.push(a)
       }
     })
@@ -111,7 +112,7 @@ function moveTileDown(self, currTime){
 
 function movePiece (self, x_offset, y_offset) {
 
-  // if piece position + x_offset or pice position +y_offset > world limit then do not move the piece 
+  // if piece position + x_offset or pice position + y_offset > world limit then do not move the piece 
   if (worldLimit(self, x_offset, y_offset)) {
     if (collisionDetection(self, x_offset/pixeldeltaPerMove, y_offset/pixeldeltaPerMove)) {
       // stop my piece and generate new piece
@@ -154,7 +155,7 @@ function worldLimit (self, x_offset, y_offset) {
     // Remember : item is set according to top-left corner anchor point
     let item = self.piece[i]
     if (item.x + x_offset < 0 
-      || item.x + x_offset > 640-16
+      || item.x + x_offset > 640-32
       || item.y + y_offset > 864) {
       return false
     }
@@ -163,21 +164,13 @@ function worldLimit (self, x_offset, y_offset) {
   return true
 }
 
-// function generateMorePieces (self) {
-//   self.piece.forEach(item => {
-//     if (item.y >= 864 - 16 ){
-//       self.piece = drawPieceOnCanvas (self, pieces, start)
-//     }
-//   })
-// }
-
 function collisionDetection (self, next_col, next_row) {
   for (let i = 0; i < self.piece.length; i++) {
     let item = self.piece[i]
     let item_col = item.x / pixeldeltaPerMove
     let item_row = item.y / pixeldeltaPerMove
 
-    if (item.y >= 864 - 16 || self.board[item_row + next_row][item_col + next_col] == 7 ){
+    if (item.y >= 864 - 32 || self.board[item_row + next_row][item_col + next_col] == 7 ){
       return true
     }
   }
