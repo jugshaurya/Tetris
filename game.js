@@ -114,11 +114,13 @@ function movePiece (self, x_offset, y_offset) {
 
   // if piece position + x_offset or pice position + y_offset > world limit then do not move the piece 
   if (worldLimit(self, x_offset, y_offset)) {
-    if (collisionDetection(self, x_offset/pixeldeltaPerMove, y_offset/pixeldeltaPerMove)) {
+    if (overallCollisionDetection(self, x_offset/pixeldeltaPerMove, y_offset/pixeldeltaPerMove)) {
       // stop my piece and generate new piece
       console.log('fa')
-      replaceOldPieceDigit(self)
-      self.piece = drawPieceOnCanvas(self, pieces, start)
+      if (yCollisionDetection(self, x_offset/pixeldeltaPerMove, y_offset/pixeldeltaPerMove)){
+        replaceOldPieceDigit(self)
+        self.piece = drawPieceOnCanvas(self, pieces, start)
+      }
     }else{
       // keep on doing what ever was happening
       self.piece.forEach(item => {
@@ -164,13 +166,26 @@ function worldLimit (self, x_offset, y_offset) {
   return true
 }
 
-function collisionDetection (self, next_col, next_row) {
+function overallCollisionDetection (self, next_col, next_row) {
   for (let i = 0; i < self.piece.length; i++) {
     let item = self.piece[i]
     let item_col = item.x / pixeldeltaPerMove
     let item_row = item.y / pixeldeltaPerMove
 
     if (item.y >= 864 - 32 || self.board[item_row + next_row][item_col + next_col] == 7 ){
+      return true
+    }
+  }
+  return false
+}
+
+function yCollisionDetection (self, next_col, next_row) {
+  for (let i = 0; i < self.piece.length; i++) {
+    let item = self.piece[i]
+    let item_col = item.x / pixeldeltaPerMove
+    let item_row = item.y / pixeldeltaPerMove
+
+    if (item.y >= 864 - 32 || self.board[item_row + next_row][item_col] == 7 ){
       return true
     }
   }
