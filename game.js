@@ -32,7 +32,13 @@ function preload() {
     frameHeight : 32
   })
 
-  this.piece = null
+  this.piece = {
+    piece: null,
+    matrix: pieces.piece ,
+    center : {x : start.x , y: start.y}
+  }
+
+  console.log(this.piece)
 }
  
 function create() {
@@ -41,14 +47,37 @@ function create() {
   this.board = playingBoard(game.canvas.clientWidth, game.canvas.clientHeight)
   
   // Piece on Canvas and filling initially inside game-board
-  this.piece = drawPieceOnCanvas(this, pieces, start)
+  this.piece = {
+    ...this.piece,
+    piece : drawPieceOnCanvas(this, this.piece.matrix, this.piece.center),
+  }
+
   fillBoardAccordingToPiecesPos(this, 0, 0)  
   
   // Controller
   this.keyboardCursor = this.input.keyboard.createCursorKeys();
+  key_A = this.input.keyboard.addKey('A')
+  key_D = this.input.keyboard.addKey('D')
+  // this.input.keyboard.on('keydown_D');
 
   // Printing of Board  - For testing Purpose
   printBoardOnCanvas(this)
+  console.log(key_A)
+
+  key_A.on('down', () => {
+    rotate(this.piece.matrix, -1) 
+    this.piece.piece.forEach(item => item.destroy())
+    this.piece.piece = drawPieceOnCanvas(this, this.piece.matrix, this.piece.center)
+  })
+
+  key_D.on('down', () => {
+    console.log('d enter')
+    rotate(this.piece.matrix, 1) 
+    this.piece.piece.forEach(item => item.destroy())
+    console.log(this.piece.center)
+    this.piece.piece = drawPieceOnCanvas(this, this.piece.matrix, this.piece.center)
+    console.log('dout')
+  })
 }
 
 // runs at 1000/32 ~ 62.5 frames per sec
@@ -71,132 +100,21 @@ function update () {
     this.keyboardCursor.down.isDown = false
     passedTime = 0
   }  
-}
 
-// Helper Functions
-function playingBoard (width, height) {
-  // Since Sprite is of 32 X 32 we are making board cells of same Dimensions
-  board = []
-  for (let i = 0; i < height / blockHeight; i++) {
-    board.push(new Array(width / blockWidth).fill(0))
-  }
-  return board;
-}
+  // console.log(key_A)
+  // if w is pressed we rotate the matrix of current piece 
+  // destroy all the old sprited availabel in this.piece.piece
+  // this.piece.matrix is changes to rotated matrix and redrawn on canvas using drawPieceOnCanvas
 
-function drawPieceOnCanvas (self, pieces, start) {
-  let complete_piece = []
-  const piece = pieces.piece  
-  piece.forEach((row, x) => {
-    row.forEach((col, y) => {
-      if (piece[x][y] === 1) { 
-        let a = self.add.sprite(y*blockWidth + start.x, x*blockHeight + start.y , 'blocks').setOrigin(0, 0).setScale(1
-          )
-        complete_piece.push(a)
-      }
-    })
-  }) 
+  // if (a is pressed){
+    // rotate(this.piece.matrix, -1) 
+    // this.piece.piece.forEach(item => item.destroy())
+    // this.piece.piece = drawPieceOnCanvas(this, this.piece.matrix, this.piece.center)
+  // }
 
-  return complete_piece
-}
-
-function moveTileDown(self, currTime){
-  let delta = currTime - lastTime
-  lastTime = currTime
-  passedTime += delta
-
-  if (passedTime > maxTime) {
-    movePiece(self, 0, pixeldeltaPerMove)
-    passedTime = 0
-  }
-}
-
-function movePiece (self, x_offset, y_offset) {
-
-  // if piece position + x_offset or pice position + y_offset > world limit then do not move the piece 
-  if (worldLimit(self, x_offset, y_offset)) {
-    if (overallCollisionDetection(self, x_offset/pixeldeltaPerMove, y_offset/pixeldeltaPerMove)) {
-      // stop my piece and generate new piece
-      console.log('fa')
-      if (yCollisionDetection(self, x_offset/pixeldeltaPerMove, y_offset/pixeldeltaPerMove)){
-        replaceOldPieceDigit(self)
-        self.piece = drawPieceOnCanvas(self, pieces, start)
-      }
-    }else{
-      // keep on doing what ever was happening
-      self.piece.forEach(item => {
-        item.x += x_offset
-        item.y += y_offset
-      })
-    }
-    fillBoardAccordingToPiecesPos(self, x_offset/pixeldeltaPerMove, y_offset/pixeldeltaPerMove)
-  }
-}
-
-function fillBoardAccordingToPiecesPos (self, last_col, last_row) {
-  // resetting
-  self.piece.forEach(item => {
-    let item_col = item.x / pixeldeltaPerMove
-    let item_row = item.y / pixeldeltaPerMove
-    self.board[item_row - last_row][item_col - last_col] = 0
-  })
-
-  // updating
-  self.piece.forEach( item => {
-    let item_col = item.x / pixeldeltaPerMove
-    let item_row = item.y / pixeldeltaPerMove    
-    self.board[item_row][item_col] = activeSprite
-
-  })
-
-}
-
-function worldLimit (self, x_offset, y_offset) {
-
-  for (let i = 0; i < self.piece.length; i++) {
-    // checking for left and right boundaries
-    // Remember : item is set according to top-left corner anchor point
-    let item = self.piece[i]
-    if (item.x + x_offset < 0 
-      || item.x + x_offset > 640-32
-      || item.y + y_offset > 864) {
-      return false
-    }
-  }
-
-  return true
-}
-
-function overallCollisionDetection (self, next_col, next_row) {
-  for (let i = 0; i < self.piece.length; i++) {
-    let item = self.piece[i]
-    let item_col = item.x / pixeldeltaPerMove
-    let item_row = item.y / pixeldeltaPerMove
-
-    if (item.y >= 864 - 32 || self.board[item_row + next_row][item_col + next_col] == 7 ){
-      return true
-    }
-  }
-  return false
-}
-
-function yCollisionDetection (self, next_col, next_row) {
-  for (let i = 0; i < self.piece.length; i++) {
-    let item = self.piece[i]
-    let item_col = item.x / pixeldeltaPerMove
-    let item_row = item.y / pixeldeltaPerMove
-
-    if (item.y >= 864 - 32 || self.board[item_row + next_row][item_col] == 7 ){
-      return true
-    }
-  }
-  return false
-}
-
-
-function replaceOldPieceDigit (self) {
-  self.piece.forEach(item => {
-    let item_col = item.x / pixeldeltaPerMove
-    let item_row = item.y / pixeldeltaPerMove
-    self.board[item_row][item_col] = dropedSprite  
-  })
+  // if (d is pressed){
+  //   rotate(this.piece.matrix, 1) 
+  //   this.piece.piece.forEach(item => item.destroy())
+  //   this.piece.piece = drawPieceOnCanvas(this, this.piece.matrix, this.piece.center)
+  // }
 }
