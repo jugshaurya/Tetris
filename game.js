@@ -35,7 +35,7 @@ function preload() {
   this.piece = {
     piece: null,
     matrix: pieces.piece ,
-    center : {x : start.x , y: start.y}
+    center : {x : start.x , y: start.y},
   }
 
   console.log(this.piece)
@@ -49,7 +49,7 @@ function create() {
   // Piece on Canvas and filling initially inside game-board
   this.piece = {
     ...this.piece,
-    piece : drawPieceOnCanvas(this, this.piece.matrix, this.piece.center),
+    piece : drawPieceOnCanvas(this, this.piece.matrix, this.piece.center, currentColor),
   }
 
   fillBoardAccordingToPiecesPos(this, 0, 0)  
@@ -67,7 +67,7 @@ function create() {
   key_A.on('down', () => {
     rotate(this.piece.matrix, -1) 
     this.piece.piece.forEach(item => item.destroy())
-    this.piece.piece = drawPieceOnCanvas(this, this.piece.matrix, this.piece.center)
+    this.piece.piece = drawPieceOnCanvas(this, this.piece.matrix, this.piece.center, currentColor)
   })
 
   key_D.on('down', () => {
@@ -75,7 +75,7 @@ function create() {
     rotate(this.piece.matrix, 1) 
     this.piece.piece.forEach(item => item.destroy())
     console.log(this.piece.center)
-    this.piece.piece = drawPieceOnCanvas(this, this.piece.matrix, this.piece.center)
+    this.piece.piece = drawPieceOnCanvas(this, this.piece.matrix, this.piece.center, currentColor)
     console.log('dout')
   })
 }

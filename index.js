@@ -15,7 +15,7 @@ const pieces = {
 
 let lastTime = 0
 let passedTime = 0
-let maxTime = 1000 // 1 sec
+let maxTime = 350 // 350/1000 sec
 
 let start = {
   x: 64,
@@ -29,6 +29,7 @@ let blockHeight = 32
 let dropedSprite = 7
 let activeSprite = 2023
 
+let currentColor = Math.floor(Math.random()*7)
 function printBoardOnCanvas(self) {
   for (let i = 0; i < self.board.length; i++) {
     for (let j = 0; j < self.board[i].length; j++) {
@@ -49,13 +50,13 @@ function playingBoard(width, height) {
   return board;
 }
 
-function drawPieceOnCanvas(self, matrix, start) {
+function drawPieceOnCanvas(self, matrix, start, color) {
   let complete_piece = []
   const piece = matrix
   piece.forEach((row, x) => {
     row.forEach((col, y) => {
       if (piece[x][y] === 1) {
-        let a = self.add.sprite(y * blockWidth + start.x, x * blockHeight + start.y, 'blocks').setOrigin(0, 0).setScale(1)
+        let a = self.add.sprite(y * blockWidth + start.x, x * blockHeight + start.y, 'blocks', color).setOrigin(0, 0).setScale(1)
         complete_piece.push(a)
       }
     })
@@ -78,7 +79,8 @@ function moveTileDown(self, currTime) {
 function movePiece(self, x_offset, y_offset) {
 
   // if piece position + x_offset or pice position + y_offset > world limit then do not move the piece 
-  if (worldLimit(self, x_offset, y_offset)) {
+  const res = worldLimit(self, x_offset, y_offset)
+  if (res) {
     if (overallCollisionDetection(self, x_offset / pixeldeltaPerMove, y_offset / pixeldeltaPerMove)) {
       // stop my piece and generate new piece
       console.log('fa')
@@ -86,8 +88,9 @@ function movePiece(self, x_offset, y_offset) {
         replaceOldPieceDigit(self)
         self.piece.center.x = start.x
         self.piece.center.y = start.y
-
-        self.piece.piece = drawPieceOnCanvas(self, self.piece.matrix, self.piece.center)
+        
+        currentColor = Math.floor(Math.random()*7)
+        self.piece.piece = drawPieceOnCanvas(self, self.piece.matrix, self.piece.center, currentColor)
       }
     } else {
       // keep on doing what ever was happening
@@ -122,8 +125,8 @@ function fillBoardAccordingToPiecesPos(self, last_col, last_row) {
 }
 
 function worldLimit(self, x_offset, y_offset) {
-
-  for (let i = 0; i < self.piece.length; i++) {
+  // console.log('djgf')
+  for (let i = 0; i < self.piece.piece.length; i++) {
     // checking for left and right boundaries
     // Remember : item is set according to top-left corner anchor point
     let item = self.piece.piece[i]
